@@ -1,6 +1,80 @@
-# for-cheng-jin
 import csv
 import datetime
+import os  # Import the 'os' module for file path handling
+
+# Define the file paths
+users_file = 'users.txt'
+ppe_file = 'ppe.txt'
+suppliers_file = 'suppliers.txt'
+transactions_file = 'transactions.txt'  # Add transactions file path
+
+def admin_add_user():
+    user_id = input("Enter new User ID: ")
+    user_name = input("Enter user's name: ")
+    password = input("Enter new password: ")
+    user_type = input("Enter user type (admin or staff): ")
+
+    # Check if the user ID is unique
+    with open('users.txt', 'r') as file:
+        for line in file:
+            parts = line.strip().split(',')
+            if parts[0] == user_id:
+                print("User ID already exists. Please choose a different one.\n")
+                return
+
+    # Add the new user to users.txt
+    with open('users.txt', 'a') as file:
+        file.write(f"{user_id},{user_name},{password},{user_type}\n")
+
+    print("New user added!\n")
+
+# Function to delete an existing user by the admin (Admin Only)
+def admin_delete_user():
+    user_id = input("Enter the User ID to delete: ")
+
+    # Check if the user exists
+    with open('users.txt', 'r') as file:
+        lines = file.readlines()
+
+    found = False
+    with open('users.txt', 'w') as file:
+        for line in lines:
+            parts = line.strip().split(',')
+            if parts[0] == user_id:
+                found = True
+            else:
+                file.write(line)
+
+    if found:
+        print("User deleted!\n")
+    else:
+        print("User not found.\n")
+
+# Function to edit information of an existing user by the admin (Admin Only)
+def admin_edit_user():
+    user_id = input("Enter the User ID to edit: ")
+
+    # Check if the user exists
+    with open('users.txt', 'r') as file:
+        lines = file.readlines()
+
+    found = False
+    with open('users.txt', 'w') as file:
+        for line in lines:
+            parts = line.strip().split(',')
+            if parts[0] == user_id:
+                user_name = input("Enter new user's name: ")
+                password = input("Enter new password: ")
+                user_type = input("Enter user type (admin or staff): ")
+                file.write(f"{user_id},{user_name},{password},{user_type}\n")
+                found = True
+            else:
+                file.write(line)
+
+    if found:
+        print("User information updated!\n")
+    else:
+        print("User not found.\n")
 
 # Function to create the initial users.txt file with an admin and a staff user
 def create_initial_users_file():
@@ -8,40 +82,46 @@ def create_initial_users_file():
         file.write("admin123,Admin User,adminpassword,admin,Administrator\n")
         file.write("staff123,Staff User,staffpassword,staff,Staff\n")
 
+
+
 # Function to create the initial ppe.txt file with 6 PPE items
 def create_initial_ppe_file():
-    with open('ppe.txt', 'w') as file:
+    with open(ppe_file, 'w') as file:
         file.write("HC,Supplier1,100\n")
         file.write("FS,Supplier1,100\n")
         file.write("MS,Supplier2,100\n")
-        file.write("GL,Supplier3,100\n")
+        file.write("GL,Supplier2,100\n")
         file.write("GW,Supplier4,100\n")
         file.write("SC,Supplier5,100\n")
 
 # Function to create the initial suppliers.txt file with sample supplier data
 def create_initial_suppliers_file():
-    with open('suppliers.txt', 'w') as file:
+    with open(suppliers_file, 'w') as file:
         file.write("Supplier1,HC,123-456-7890\n")
         file.write("Supplier1,FS,123-456-7890\n")
-        file.write("Supplier3,MS,555-555-5555\n")
-        file.write("Supplier4,GL,777-777-7777\n")
-        file.write("Supplier5,GW,888-888-8888\n")
-        file.write("Supplier6,SC,999-999-9999\n")
+        file.write("Supplier2,MS,555-555-5555\n")
+        file.write("Supplier2,GL,555-555-5555\n")
+        file.write("Supplier4,GW,888-888-8888\n")
+        file.write("Supplier5,SC,999-999-9999\n")
+
+# Function to create transactions.txt and record transactions
+def create_transactions_file():
+    with open(transactions_file, 'w') as file:
+        pass  # Create an empty transactions file
 
 # Function to display current stock for all items
 def display_current_stock():
-    with open('ppe.txt', 'r') as file:
+    with open(ppe_file, 'r') as file:
         print("Current Stock:")
         print("{:<5} {:<15} {:<10}".format("Item", "Supplier", "Quantity"))
         for line in file:
             item_code, supplier_code, quantity = line.strip().split(',')
             print("{:<5} {:<15} {:<10}".format(item_code, supplier_code, quantity))
 
-
 # Function to search and print details of items distributed for a particular item (Admin and Staff)
 def search_item_distribution():
     item_code = input("Enter Item Code to search for distribution details: ")
-    with open('transactions.txt', 'r') as file:
+    with open(transactions_file, 'r') as file:
         print(f"Distribution Details for Item Code: {item_code}")
         print("{:<20} {:<15} {:<10}".format("Date-Time", "Supplier", "Quantity Change"))
         for line in file:
@@ -49,14 +129,11 @@ def search_item_distribution():
             if code == item_code:
                 print("{:<20} {:<15} {:<10}".format(timestamp, supplier_code, quantity_change))
 
-
-
-# Function to create transactions.txt and record transactions
-
+# Function to record a transaction in transactions.txt
 def record_transaction(item_code, supplier_code, quantity_change):
     timestamp = datetime.datetime.now()
     transaction_data = f"{timestamp},{item_code},{supplier_code},{quantity_change}\n"
-    with open('transactions.txt', 'a') as file:
+    with open(transactions_file, 'a') as file:
         file.write(transaction_data)
 
 # Function to add/update supplier information (Admin Only)
@@ -145,6 +222,8 @@ def authenticate_user():
     return None
 
 # Main program
+if not os.path.exists(transactions_file):  # Check if transactions file exists
+    create_transactions_file()  # If not, create it
 try:
     with open('users.txt', 'r') as file:
         pass
@@ -172,35 +251,38 @@ while True:
         print("Welcome, Admin User!\n")
         display_current_stock()  # Display stock for admin
         print("Options:")
-        print("1. Edit/Add User Information (Admin Only)")
-        print("2. Edit Supplier Information (Admin Only)")
-        print("3. Update PPE Item Quantities (Admin and Staff)")
-        print("4. Search Item Distribution")
-        print("5. Exit")
+        print("1. Add User Information (Admin Only)")
+        print("2. Delete user information (Admin Only)")
+        print("3. Edit user information")
+        print("4. Update PPE Item Quantities (Admin and Staff)")
+        print("5. Search PPE Item Distribution")
+        print("6. End")
 
-        choice = input("Enter your choice (1, 2, 3, 4, or 5): ")
+        choice = input("Enter your choice (1, 2, 3, 4,5 or 6): ")
 
         if choice == '1':
             admin_add_user()
         elif choice == '2':
-            admin_update_supplier()
+            admin_delete_user()
         elif choice == '3':
-            update_ppe_quantity()
+            admin_edit_user()
         elif choice == '4':
-            search_item_distribution()
+            update_ppe_quantity()
         elif choice == '5':
+            search_item_distribution()
+        elif choice == '6':
             break
         else:
-            print("Invalid choice. Please enter 1, 2, 3,4 or 5.\n")
-    else:
-        print("Welcome, Regular User!\n")
+            print("Invalid choice. Please enter 1, 2, 3, 4, 5, or 6.\n")
+    elif user_type == 'staff':
+        print("Welcome, Staff User!\n")
         display_current_stock()  # Display stock for staff
         print("Options:")
-        print("1. Update PPE Item Quantities (Regular User)")
+        print("1. Update PPE Item Quantities (Admin & Staff Only)")
         print("2. Search Item Distribution")
         print("3. Exit")
 
-        choice = input("Enter your choice (1,2 or 3): ")
+        choice = input("Enter your choice (1, 2, or 3): ")
 
         if choice == '1':
             update_ppe_quantity()
@@ -209,6 +291,6 @@ while True:
         elif choice == '3':
             break
         else:
-            print("Invalid choice. Please enter 1 or 2.\n")
+            print("Invalid choice. Please enter 1, 2, or 3.\n")
 
 print("Thank you and slay always.")
